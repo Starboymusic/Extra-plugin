@@ -15,11 +15,23 @@ from dotenv import load_dotenv
 load_dotenv()
 from ChampuMusic.logging import LOGGER
 
+# Helper function to check admin status
+async def is_admin(client, chat_id, user_id):
+    try:
+        chat_member = await client.get_chat_member(chat_id, user_id)
+        return chat_member.status in ["creator", "administrator"]
+    except:
+        return False
+
 @app.on_message(
-    filters.command(["vcuser", "vcusers", "vcmember", "vcmembers"]) & filters.admin
+    filters.command(["vcuser", "vcusers", "vcmember", "vcmembers"])
     & (filters.user(OWNER_ID) | filters.user(SPECIAL_ID))
 )
 async def vc_members(client, message):
+    # Check if user is admin
+    if not await is_admin(client, message.chat.id, message.from_user.id):
+        return await message.reply("You need admin rights to use this command!")
+    
     try:
         language = await get_lang(message.chat.id)
         _ = get_string(language)
@@ -81,12 +93,12 @@ async def brah(_, msg):
                 mention = f"@{user.username}"
             else:
                 mention = user.mention
-                await msg.reply(f"**{mention} sᴛᴀʀᴛᴇᴅ ᴛʜᴇ ᴠᴏɪᴄᴇ ᴄʜᴀᴛ! 😊**")
+            await msg.reply(f"**{mention} sᴛᴀʀᴛᴇᴅ ᴛʜᴇ ᴠᴏɪᴄᴇ ᴄʜᴀᴛ! 😊**")
         else:
             await msg.reply("sᴏᴍᴇᴏɴᴇ sᴛᴀʀᴛᴇᴅ ᴛʜᴇ ᴠᴏɪᴄᴇ ᴄʜᴀᴛ! 😊")
     else:
         LOGGER.error("ʙᴏᴛ ᴅᴏᴇs ɴᴏᴛ ʜᴀᴠᴇ ᴘᴇʀᴍɪssɪᴏɴ ᴛᴏ sᴇɴᴅ ᴍᴇssᴀɢᴇs ɪɴ ᴛʜɪs ᴄʜᴀᴛ.")
-        # You can also send a notification to the bot owner or admin here
+
 # vc off
 @app.on_message(filters.video_chat_ended)
 async def brah2(_, msg):
@@ -97,12 +109,11 @@ async def brah2(_, msg):
                 mention = f"@{user.username}"
             else:
                 mention = user.mention
-                await msg.reply(f"**{mention} ᴇɴᴅᴇᴅ ᴛʜᴇ ᴠɪᴅᴇᴏ ᴄʜᴀᴛ! 😕**")
+            await msg.reply(f"**{mention} ᴇɴᴅᴇᴅ ᴛʜᴇ ᴠɪᴅᴇᴏ ᴄʜᴀᴛ! 😕**")
         else:
             await msg.reply("sᴏᴍᴇᴏɴᴇ ᴇɴᴅᴇᴅ ᴛʜᴇ ᴠɪᴅᴇᴏ ᴄʜᴀᴛ! 😕")
     else:
         LOGGER.error("ʙᴏᴛ ᴅᴏᴇs ɴᴏᴛ ʜᴀᴠᴇ ᴘᴇʀᴍɪssɪᴏɴ ᴛᴏ sᴇɴᴅ ᴍᴇssᴀɢᴇs ɪɴ ᴛʜɪs ᴄʜᴀᴛ.")
-        # You can also send a notification to the bot owner or admin here
 
 @app.on_message(filters.video_chat_members_invited)
 async def brah3(app: app, message: Message):
@@ -130,18 +141,16 @@ async def brah3(app: app, message: Message):
 ####
 
 @app.on_message(filters.command("math", prefixes="/"))
-def calculate_math(client, message):
-    expression = message.text.split("/math ", 1)[1]
+async def calculate_math(client, message):
     try:
+        expression = message.text.split("/math ", 1)[1]
         result = eval(expression)
         response = f"ᴛʜᴇ ʀᴇsᴜʟᴛ ɪs : {result}"
+    except IndexError:
+        response = "ᴘʟᴇᴀsᴇ ᴘʀᴏᴠɪᴅᴇ ᴀ ᴍᴀᴛʜ ᴇxᴘʀᴇssɪᴏɴ"
     except:
         response = "ɪɴᴠᴀʟɪᴅ ᴇxᴘʀᴇssɪᴏɴ"
-    message.reply(response)
-
-
-
-
+    await message.reply(response)
 
 __MODULE__ = "Mᴀᴛʜ"
 __HELP__ = """
